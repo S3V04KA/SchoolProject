@@ -1,0 +1,5 @@
+.docker/
+db-data/
+pgadmin-data/
+.env
+.DS_Store

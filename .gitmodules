@@ -1,0 +1,3 @@
+[submodule "auth_backend"]
+	path = auth_backend
+	url = https://github.com/S3V04KA/school_auth_backend.git
