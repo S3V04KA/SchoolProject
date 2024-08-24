@@ -1,0 +1,1 @@
+auth_endpoint = 'http://auth_backend:8000'

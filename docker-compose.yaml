@@ -49,3 +49,16 @@ services:
         condition: service_healthy
     ports:
       - '8000:8000'
+
+  template:
+    build:
+      context: template_module
+      dockerfile: Dockerfile
+    command: sh ./entrypoint.sh
+    tty: true
+    volumes:
+      - ./template_module:/template/
+    depends_on:
+      - auth_backend
+    ports:
+      - '8001:8001'
