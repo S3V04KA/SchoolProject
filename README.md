@@ -83,7 +83,7 @@
 1. Склонируйте этот репозиторй себе и откройте его в консоли
 2. Выполните комманду
   ```sh
-    docker compose up -d --build
+    ./entrypoint.sh -f docker-compose.dev.yaml
   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
