@@ -1,0 +1,113 @@
+version: '3'
+
+services:
+  traefik:
+    image: "traefik:v3.1"
+    container_name: "traefik"
+    env_file: .env
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      DOMAIN: ${DOMAIN}
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.school.acme.httpchallenge=true"
+      - "--certificatesresolvers.school.acme.httpchallenge.entrypoint=web"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.school.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.school.acme.storage=/letsencrypt/acme.json"
+    labels:
+            # Dashboard
+            - 'traefik.http.routers.traefik.tls=true'
+            - 'traefik.http.routers.traefik.rule=Host(`${DOMAIN}`)'
+            - 'traefik.http.routers.traefik.service=api@internal'
+            - 'traefik.http.routers.traefik.tls.certresolver=le'
+            - 'traefik.http.routers.traefik.entrypoints=websecure'
+            - 'traefik.http.routers.traefik.middlewares=authtraefik'
+            - 'traefik.http.middlewares.authtraefik.basicauth.users=admin:$2y$05$4ByEHaq5lvzgapfsuEI0PO94Vdj0wtdHw4SXJvPz9iQzeYBl4Z92G' # https://doc.traefik.io/traefik/middlewares/basicauth/
+
+            # global redirect to https
+            - 'traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)'
+            - 'traefik.http.routers.http-catchall.entrypoints=web'
+            - 'traefik.http.routers.http-catchall.middlewares=redirect-to-https'
+
+            # middleware redirect
+            - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+            - 'traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true'
+
+            - traefik.http.middlewares.redirect-to-www.redirectregex.regex=(https|http)://(?:www.)?(.*)
+            - traefik.http.middlewares.redirect-to-www.redirectregex.replacement=https://www.$${2}
+            - traefik.http.middlewares.redirect-to-www.redirectregex.permanent=true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: auth_db
+    ports:
+      - 5432
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth_backend:
+    build:
+      context: auth_backend
+      dockerfile: Dockerfile
+    command: sh ./entrypoint.sh
+    tty: true
+    volumes:
+      - ./auth_backend:/backend/
+      - ./.docker/.ipython:/root/.ipython:cached
+    env_file: .env
+    environment:
+      PYTHONPATH: .
+      DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/auth_db"
+      DOMAIN: ${DOMAIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth_backend.rule=Host(`auth_backend.${DOMAIN}`, `www.auth_backend.${DOMAIN}`)"
+      - "traefik.http.routers.auth_backend.entrypoints=web"
+
+  template:
+    build:
+      context: template_module
+      dockerfile: Dockerfile
+    command: sh ./entrypoint.sh
+    tty: true
+    env_file: .env
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./template_module:/template/
+    depends_on:
+      - auth_backend
+    ports:
+      - '8001:8001'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.template.rule=Host(`template.${DOMAIN}`, `www.template.${DOMAIN}`)"
+      - "traefik.http.routers.template.entrypoints=web"

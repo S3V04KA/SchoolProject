@@ -1,0 +1,94 @@
+version: '3'
+
+services:
+  traefik:
+    image: "traefik:v3.1"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: auth_db
+    ports:
+      - 5432
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth_backend:
+    build:
+      context: auth_backend
+      dockerfile: Dockerfile
+    command: sh ./entrypoint.sh
+    tty: true
+    volumes:
+      - ./auth_backend:/backend/
+      - ./.docker/.ipython:/root/.ipython:cached
+    env_file: .env
+    environment:
+      PYTHONPATH: .
+      DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/auth_db"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth_backend.rule=Host(`auth_backend.localhost`)"
+      - "traefik.http.routers.auth_backend.entrypoints=web"
+  
+  auth_frontend:
+    build:
+      context: auth_frontend
+      dockerfile: Dockerfile
+      target: dev
+    command: npm run dev
+    depends_on:
+      - auth_backend
+    tty: true
+    volumes:
+      - ./auth_frontend:/frontend/
+    ports:
+      - '3000:3000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth_frontend.rule=Host(`auth_frontend.localhost`)"
+      - "traefik.http.routers.auth_frontend.entrypoints=web"
+
+  template:
+    build:
+      context: template_module
+      dockerfile: Dockerfile
+    command: sh ./entrypoint.sh
+    tty: true
+    volumes:
+      - ./template_module:/template/
+    depends_on:
+      - auth_backend
+    ports:
+      - '8001:8001'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.template.rule=Host(`template.localhost`)"
+      - "traefik.http.routers.template.entrypoints=web"
