@@ -1,1 +1,1 @@
-auth_endpoint = 'http://auth_backend:8000'
+auth_endpoint = 'http://auth-be:8000'

@@ -10,7 +10,8 @@ else
   if [ "$SECTION" == "dev" ]
   then
     echo "Running in development mode..."
-    docker compose -f docker-compose.dev.yaml up
+    export DOMAIN="localhost"
+    docker compose -f docker-compose.dev.yaml up -d
   else
     echo "Error: Invalid section. Please specify 'prod' or 'dev'."
   fi

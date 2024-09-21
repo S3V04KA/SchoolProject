@@ -1,0 +1,43 @@
+global:
+  checkNewVersion: true
+
+serversTransport:
+  insecureSkipVerify: true
+
+api:
+  dashboard: true
+  # insecure: true
+  debug: true
+
+entryPoints:
+  http:
+    address: ":80"
+    forwardedHeaders:
+      insecure: true
+  https:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+  file:
+    directory: /providers
+    watch: false
+  # http:
+  #   endpoint: "http://auth_backend:80/api/traefik"
+
+experimental:
+  plugins:
+    my-plugin-name:
+      moduleName: "github.com/vidosits/header-pattern-proxy"
+      version: "v1.1.0"
+
+# certificatesResolvers:
+#   letsEncrypt:
+#     acme:
+#       email: admin@gmail.com
+#       storage: acme.json
+#       httpChallenge:
+#         entryPoint: http
+
