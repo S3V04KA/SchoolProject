@@ -5,3 +5,4 @@ pgadmin-data/
 .DS_Store
 **/*_venv
 **/__pycache__
+dev.env

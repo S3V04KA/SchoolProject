@@ -15,7 +15,9 @@ services:
       - "traefik.http.routers.traefik.entrypoints=http"
       # - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.middlewares=auth@docker"
-      
+    networks:
+      - web
+      - internal
     ports:
       - "8080"
       - "80:80"
@@ -35,6 +37,8 @@ services:
       POSTGRES_DB: auth_db
     ports:
       - 5432
+    networks:
+     - internal
     volumes:
       - ./db-data:/var/lib/postgresql/data
     healthcheck:
@@ -58,12 +62,21 @@ services:
       DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/auth_db"
       SECRET: ${SECRET}
       DOMAIN: ${DOMAIN}
+      REDIS_URL: 'redis://default:${REDIS_PASSWORD}@redis:6379'
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
       traefik:
         required: true
         condition: service_started
+      redis:
+        required: true
+        condition: service_started
+    networks:
+      - internal
+      - web
     ports:
       - '80'
     labels:
@@ -93,6 +106,8 @@ services:
       - ./auth_frontend:/frontend/
     ports:
       - '3000:3000'
+    networks:
+     - internal
 
 
   template:
@@ -107,6 +122,9 @@ services:
       - auth-be
     ports:
       - '8001:8001'
+    networks:
+     - internal
+     - web
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.template.rule=Host(`template.${DOMAIN}`)"
@@ -114,3 +132,10 @@ services:
       # - "traefik.http.routers.template.tls=true"
       # - "traefik.http.routers.template.service=api@internal"
       - "traefik.http.routers.template.middlewares=auth@docker"
+
+networks:
+  internal:
+  web:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"

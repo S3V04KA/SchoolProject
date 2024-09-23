@@ -27,12 +27,6 @@ providers:
   # http:
   #   endpoint: "http://auth_backend:80/api/traefik"
 
-experimental:
-  plugins:
-    my-plugin-name:
-      moduleName: "github.com/vidosits/header-pattern-proxy"
-      version: "v1.1.0"
-
 # certificatesResolvers:
 #   letsEncrypt:
 #     acme:
