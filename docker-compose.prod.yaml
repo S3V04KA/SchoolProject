@@ -98,7 +98,7 @@ services:
     build:
       context: auth_frontend
       dockerfile: Dockerfile
-      target: prod
+      target: dev
     depends_on:
       - auth-be
     tty: true
