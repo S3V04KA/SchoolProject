@@ -73,9 +73,6 @@ services:
       traefik:
         required: true
         condition: service_started
-      redis:
-        required: true
-        condition: service_started
     networks:
       - internal
       - web
