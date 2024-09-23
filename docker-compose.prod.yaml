@@ -67,6 +67,7 @@ services:
       DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/auth_db"
       SECRET: ${SECRET}
       DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
     depends_on:
       postgres:
         condition: service_healthy
