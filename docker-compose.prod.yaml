@@ -67,9 +67,6 @@ services:
       DATABASE_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres:5432/auth_db"
       SECRET: ${SECRET}
       DOMAIN: ${DOMAIN}
-      REDIS_URL: 'redis://default:${REDIS_PASSWORD}@redis:6379'
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
