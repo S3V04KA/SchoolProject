@@ -84,16 +84,16 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
       - "traefik.http.routers.auth-be.rule=Host(`auth.${DOMAIN}`)"
-      - "traefik.http.routers.authelia.entrypoints=https"
-      - "traefik.http.routers.authelia.tls=true"
-      - "traefik.http.routers.authelia.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.auth-be.entrypoints=https"
+      - "traefik.http.routers.auth-be.tls=true"
+      - "traefik.http.routers.auth-be.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.auth-be.service=auth-be"
       - "traefik.http.services.auth-be.loadbalancer.server.port=80"
       - 'traefik.http.middlewares.auth.forwardAuth.address=http://auth-be:80/api/authz/?url=http%3A%2F%2Fauth.${DOMAIN}%2F'
       - "traefik.http.middlewares.auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.auth.forwardauth.authResponseHeaders=Authorization,Set-Cookie"
       - "traefik.http.middlewares.auth.forwardauth.addAuthCookiesToResponse=token,token_type"
-      - "traefik.http.routers.authelia.middlewares=redirect-to-https"
+      - "traefik.http.routers.auth-be.middlewares=redirect-to-https"
 
   
   auth-fe:
@@ -136,7 +136,7 @@ services:
       - "traefik.http.routers.nginx.entrypoints=https"
       - "traefik.http.routers.nginx.tls=true"
       - "traefik.http.routers.nginx.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.template.middlewares=auth@docker"
+      - "traefik.http.routers.template.middlewares=redirect-to-https,auth@docker"
 
 networks:
   internal:
