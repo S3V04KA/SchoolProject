@@ -134,9 +134,10 @@ services:
       - "traefik.docker.network=web"
       - "traefik.http.routers.template.rule=Host(`template.${DOMAIN}`)"
       - "traefik.http.routers.nginx.entrypoints=https"
-      - "traefik.http.routers.nginx.tls=true"
-      - "traefik.http.routers.nginx.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.template.middlewares=redirect-to-https,auth@docker"
+      # - "traefik.http.routers.nginx.tls=true"
+      # - "traefik.http.routers.nginx.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.template.middlewares=auth@docker"
+      # - "traefik.http.routers.template.middlewares=redirect-to-https,auth@docker"
 
 networks:
   internal:
