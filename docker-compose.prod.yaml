@@ -84,7 +84,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
       - "traefik.http.routers.auth-be.rule=Host(`auth.${DOMAIN}`)"
-      - "traefik.http.routers.auth-be.entrypoints=http"
+      - "traefik.http.routers.auth-be.entrypoints=http,https"
       - "traefik.http.routers.auth-be.tls=true"
       - "traefik.http.routers.auth-be.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.auth-be.service=auth-be"
