@@ -7,7 +7,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      ACME_EMAIL: ${ACME_EMAIL}
+      TRAEFIK_CERTIFICATESRESOLVERS_letsEncrypt_ACME_EMAIL: ${ACME_EMAIL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.entrypoints=https"
