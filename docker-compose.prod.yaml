@@ -25,6 +25,7 @@ services:
     networks:
       - web
       - internal
+      - traefik
     ports:
       - "8080"
       - "80:80"
@@ -145,3 +146,6 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+  traefik:
+    external:
+      name: gateway
